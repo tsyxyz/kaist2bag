@@ -24,9 +24,7 @@ int VelodyneConverter::Convert() {
     CheckAndCreateSaveDir();
 
     boost::filesystem::path left_bag_file = boost::filesystem::path(save_dir_) / left_bag_name_;
-    rosbag::Bag left_bag(left_bag_file.string(), rosbag::bagmode::Write);
     boost::filesystem::path right_bag_file = boost::filesystem::path(save_dir_) / right_bag_name_;
-    rosbag::Bag right_bag(right_bag_file.string(), rosbag::bagmode::Write);
 
     const std::string left_stamp_file = dataset_dir_ + "/" + default_left_stamp_file;
     const std::string left_data_dir = dataset_dir_ + "/" + default_left_data_dir;
@@ -46,6 +44,8 @@ int VelodyneConverter::Convert() {
 void VelodyneConverter::Convert(const std::string& stamp_file, const std::string& data_dir, const std::string& bag_file,
                                 const std::string& topic, const std::string& frame_id) {
     rosbag::Bag bag(bag_file, rosbag::bagmode::Write);
+    bag.setChunkThreshold(768*1024);
+    bag.setCompression(rosbag::compression::BZ2);
 
     FILE* fp = fopen(stamp_file.c_str(), "r");
     int64_t stamp;
@@ -81,6 +81,7 @@ void VelodyneConverter::Convert(const std::string& stamp_file, const std::string
         cloud.header.stamp.fromNSec(all_stamps[i]);
         cloud.header.frame_id = frame_id;
         bag.write(topic, cloud.header.stamp, cloud);
+        ROS_INFO("bag write %s, %u points\n", topic.c_str(), cloud.height * cloud.width);
         ROS_INFO("done converting %s\n", frame_file.c_str());
         ROS_INFO("total %lu, already convert %lu, remain %lu\n", total, i + 1, total - i - 1);
     }

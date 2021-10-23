@@ -22,9 +22,7 @@ int SickConverter::Convert() {
     CheckAndCreateSaveDir();
 
     boost::filesystem::path back_bag_file = boost::filesystem::path(save_dir_) / back_bag_name_;
-    rosbag::Bag back_bag(back_bag_file.string(), rosbag::bagmode::Write);
     boost::filesystem::path middle_bag_file = boost::filesystem::path(save_dir_) / middle_bag_name_;
-    rosbag::Bag middle_bag(middle_bag_file.string(), rosbag::bagmode::Write);
 
     const std::string back_stamp_file = dataset_dir_ + "/" + default_back_stamp_file;
     const std::string back_data_dir = dataset_dir_ + "/" + default_back_data_dir;
@@ -44,6 +42,8 @@ int SickConverter::Convert() {
 void SickConverter::Convert(const std::string& stamp_file, const std::string& data_dir, const std::string& bag_file,
                                 const std::string& topic, const std::string& frame_id) {
     rosbag::Bag bag(bag_file, rosbag::bagmode::Write);
+    bag.setChunkThreshold(768*1024);
+    bag.setCompression(rosbag::compression::BZ2);
 
     FILE* fp = fopen(stamp_file.c_str(), "r");
     int64_t stamp;

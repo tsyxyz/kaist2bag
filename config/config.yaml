@@ -1,5 +1,5 @@
-dataset: "/mnt/d/dataset/KAIST/urban30-gangnam"
-save_to: "/mnt/d/dataset/KAIST/urban30-gangnam/bag"
+dataset: "/home/tao/sda/dataset/kaist/urban30/urban30-gangnam"
+save_to: "/home/tao/sda/dataset/kaist/urban30/urban30-gangnam/bag"
 
 altimeter: true
 altimeter_topic: "/altimeter_data"

@@ -7,10 +7,11 @@
 #include <rosbag/bag.h>
 #include <sensor_msgs/Image.h>
 #include <boost/filesystem.hpp>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs/legacy/constants_c.h>
 #include <cv_bridge/cv_bridge.h>
 
 namespace kaist2bag {
@@ -26,9 +27,7 @@ int StereoConverter::Convert() {
     CheckAndCreateSaveDir();
 
     boost::filesystem::path left_bag_file = boost::filesystem::path(save_dir_) / left_bag_name_;
-    rosbag::Bag left_bag(left_bag_file.string(), rosbag::bagmode::Write);
     boost::filesystem::path right_bag_file = boost::filesystem::path(save_dir_) / right_bag_name_;
-    rosbag::Bag right_bag(right_bag_file.string(), rosbag::bagmode::Write);
 
     const std::string stamp_file = dataset_dir_ + "/" + default_stamp_file;
     const std::string left_data_dir = dataset_dir_ + "/" + default_left_data_dir;
@@ -47,6 +46,8 @@ int StereoConverter::Convert() {
 void StereoConverter::Convert(const std::string& stamp_file, const std::string& data_dir, const std::string& bag_file,
                                 const std::string& topic, const std::string& frame_id) {
     rosbag::Bag bag(bag_file, rosbag::bagmode::Write);
+    bag.setChunkThreshold(768*1024);
+    bag.setCompression(rosbag::compression::BZ2);
 
     FILE* fp = fopen(stamp_file.c_str(), "r");
     int64_t stamp;
