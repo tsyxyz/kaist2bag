@@ -5,7 +5,8 @@ altimeter: true
 altimeter_topic: "/altimeter_data"
 
 encoder: true
-encoder_topic: "/encoder_count"
+encoder_irp_topic: "/encoder_count"
+encoder_raw_topic: "/joint_states"
 
 fog: true
 fog_topic: "/dsp1760_data"
