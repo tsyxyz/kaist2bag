@@ -6,6 +6,7 @@
 #define SRC_CONVERTER_H
 
 #include <string>
+#include <fstream>
 
 namespace kaist2bag {
 

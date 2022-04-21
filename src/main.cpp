@@ -53,75 +53,104 @@ int main(int argc, char** argv) {
     nh.getParam("dataset", dataset);
     std::string save_to;
     nh.getParam("save_to", save_to);
-
     double t0 = ros::Time::now().toSec();
-    std::string altimeter_topic;
-    nh.getParam("altimeter_topic", altimeter_topic);
-    AltimeterConverter altimeter(dataset, save_to, altimeter_topic);
-    altimeter.Convert();
+
+
+    if(sensors[SensorType::kAltimeter]) {
+        std::string altimeter_topic;
+        nh.getParam("altimeter_topic", altimeter_topic);
+        AltimeterConverter altimeter(dataset, save_to, altimeter_topic);
+        altimeter.Convert();
+    }
     double t1 = ros::Time::now().toSec();
     double altimeter_cost = t1 - t0;
 
-    std::string encoder_topic;
-    nh.getParam("encoder_topic", encoder_topic);
-    EncoderConverter encoder(dataset, save_to, encoder_topic);
-    encoder.Convert();
+
+    if(sensors[SensorType::kEncoder]) {
+        std::string encoder_irp_topic, encoder_raw_topic;
+        nh.getParam("encoder_irp_topic", encoder_irp_topic);
+        nh.getParam("encoder_raw_topic", encoder_raw_topic);
+        EncoderConverter encoder(dataset, save_to, encoder_irp_topic, encoder_raw_topic);
+        encoder.Convert();
+    }
     double t2 = ros::Time::now().toSec();
     double encoder_cost = t2 - t1;
 
-    std::string fog_topic;
-    nh.getParam("fog_topic", fog_topic);
-    FogConverter fog(dataset, save_to, fog_topic);
-    fog.Convert();
+
+    if(sensors[SensorType::kFog]) {
+        std::string fog_topic;
+        nh.getParam("fog_topic", fog_topic);
+        FogConverter fog(dataset, save_to, fog_topic);
+        fog.Convert();
+    }
     double t3 = ros::Time::now().toSec();
     double fog_cost = t3 - t2;
 
-    std::string gps_topic;
-    nh.getParam("gps_topic", gps_topic);
-    GpsConverter gps(dataset, save_to, gps_topic);
-    gps.Convert();
+
+    if(sensors[SensorType::kGps]) {
+        std::string gps_topic;
+        nh.getParam("gps_topic", gps_topic);
+        GpsConverter gps(dataset, save_to, gps_topic);
+        gps.Convert();
+    }
     double t4 = ros::Time::now().toSec();
     double gps_cost = t4 - t3;
 
-    std::string vrs_topic;
-    nh.getParam("vrs_topic", vrs_topic);
-    VrsConverter vrs(dataset, save_to, vrs_topic);
-    vrs.Convert();
+
+    if(sensors[SensorType::kVrs]) {
+        std::string vrs_topic;
+        nh.getParam("vrs_topic", vrs_topic);
+        VrsConverter vrs(dataset, save_to, vrs_topic);
+        vrs.Convert();
+    }
     double t5 = ros::Time::now().toSec();
     double vrs_cost = t5 - t4;
 
-    std::string irp_topic, raw_topic, mag_topic;
-    nh.getParam("imu_irp_topic", irp_topic);
-    nh.getParam("imu_raw_topic", raw_topic);
-    nh.getParam("imu_mag_topic", mag_topic);
-    ImuConverter imu(dataset, save_to, irp_topic, raw_topic, mag_topic);
-    imu.Convert();
+
+    if(sensors[SensorType::kImu]) {
+        std::string irp_topic, raw_topic, mag_topic;
+        nh.getParam("imu_irp_topic", irp_topic);
+        nh.getParam("imu_raw_topic", raw_topic);
+        nh.getParam("imu_mag_topic", mag_topic);
+        ImuConverter imu(dataset, save_to, irp_topic, raw_topic, mag_topic);
+        imu.Convert();
+    }
     double t6 = ros::Time::now().toSec();
     double imu_cost = t6 - t5;
 
-    std::string vlp_left_topic, vlp_right_topic;
-    nh.getParam("velodyne_left_topic", vlp_left_topic);
-    nh.getParam("velodyne_right_topic", vlp_right_topic);
-    VelodyneConverter vlp(dataset, save_to, vlp_left_topic, vlp_right_topic);
-    vlp.Convert();
+
+    if(sensors[SensorType::kVelodyne]) {
+        std::string vlp_left_topic, vlp_right_topic;
+        nh.getParam("velodyne_left_topic", vlp_left_topic);
+        nh.getParam("velodyne_right_topic", vlp_right_topic);
+        VelodyneConverter vlp(dataset, save_to, vlp_left_topic, vlp_right_topic);
+        vlp.Convert();
+    }
     double t7 = ros::Time::now().toSec();
     double velodyne_cost = t7 - t6;
 
-    std::string sick_back_topic, sick_middle_topic;
-    nh.getParam("sick_back_topic", sick_back_topic);
-    nh.getParam("sick_middle_topic", sick_middle_topic);
-    SickConverter sick(dataset, save_to, sick_back_topic, sick_middle_topic);
-    sick.Convert();
+
+    if(sensors[SensorType::kSick]) {
+        std::string sick_back_topic, sick_middle_topic;
+        nh.getParam("sick_back_topic", sick_back_topic);
+        nh.getParam("sick_middle_topic", sick_middle_topic);
+        SickConverter sick(dataset, save_to, sick_back_topic, sick_middle_topic);
+        sick.Convert();
+    }
     double t8 = ros::Time::now().toSec();
     double sick_cost = t8 - t7;
 
-    std::string stereo_left_topic, stereo_right_topic;
-    nh.getParam("stereo_left_topic", stereo_left_topic);
-    nh.getParam("stereo_right_topic", stereo_right_topic);
-    StereoConverter stereo(dataset, save_to, stereo_left_topic, stereo_right_topic);
-    stereo.Convert();
+
+    if(sensors[SensorType::kStereo]) {
+        std::string stereo_left_topic, stereo_right_topic;
+        nh.getParam("stereo_left_topic", stereo_left_topic);
+        nh.getParam("stereo_right_topic", stereo_right_topic);
+        StereoConverter stereo(dataset, save_to, stereo_left_topic, stereo_right_topic);
+        stereo.Convert();
+    }
     double t9 = ros::Time::now().toSec();
     double stereo_cost = t9 - t8;
+
 
     double all_cost = t9 - t0;
     ROS_INFO("altimeter_cost %f\n", altimeter_cost);
