@@ -129,6 +129,7 @@ int ImuConverter::Convert() {
     if(mag_bag_opened)
     {
         mag_bag.close();
+        mag_bag_opened = false;
     }
     
     fclose(fp);
