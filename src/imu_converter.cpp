@@ -30,10 +30,13 @@ int ImuConverter::Convert() {
     boost::filesystem::path mag_bag_file = boost::filesystem::path(save_dir_) / mag_bag_name_;
     rosbag::Bag irp_bag(irp_bag_file.string(), rosbag::bagmode::Write);
     rosbag::Bag raw_bag(raw_bag_file.string(), rosbag::bagmode::Write);
-    rosbag::Bag mag_bag(mag_bag_file.string(), rosbag::bagmode::Write);
+
+    rosbag::Bag mag_bag;
+    bool mag_bag_opened = false;
+    
     ROS_INFO("saving %s", irp_bag_file.c_str());
     ROS_INFO("saving %s", raw_bag_file.c_str());
-    ROS_INFO("saving %s", mag_bag_file.c_str());
+    
 
     const std::string data_file = dataset_dir_ + "/" + default_data_file;
     FILE* fp = fopen(data_file.c_str(), "r");
@@ -43,8 +46,14 @@ int ImuConverter::Convert() {
 
     int64_t stamp;
     double q_x,q_y,q_z,q_w,x,y,z,g_x,g_y,g_z,a_x,a_y,a_z,m_x,m_y,m_z;
-    while (fscanf(fp,"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
-                  &stamp,&q_x,&q_y,&q_z,&q_w,&x,&y,&z,&g_x,&g_y,&g_z,&a_x,&a_y,&a_z,&m_x,&m_y,&m_z) == 17) {
+    while (1){
+        
+        int length = fscanf(fp,"%ld,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+                  &stamp,&q_x,&q_y,&q_z,&q_w,&x,&y,&z,&g_x,&g_y,&g_z,&a_x,&a_y,&a_z,&m_x,&m_y,&m_z);
+
+        if(length != 8 && length != 17) break;
+
+                
         irp_imu.header.stamp.fromNSec(stamp);
         irp_imu.header.frame_id = "imu";
         irp_imu.quaternion_data.x = q_x;
@@ -54,15 +63,20 @@ int ImuConverter::Convert() {
         irp_imu.eular_data.x = x;
         irp_imu.eular_data.y = y;
         irp_imu.eular_data.z = z;
-        irp_imu.gyro_data.x = g_x;
-        irp_imu.gyro_data.y = g_y;
-        irp_imu.gyro_data.z = g_z;
-        irp_imu.acceleration_data.x = a_x;
-        irp_imu.acceleration_data.y = a_y;
-        irp_imu.acceleration_data.z = a_z;
-        irp_imu.magneticfield_data.x = m_x;
-        irp_imu.magneticfield_data.y = m_y;
-        irp_imu.magneticfield_data.z = m_z;
+
+        if(length > 8)
+        {
+            irp_imu.gyro_data.x = g_x;
+            irp_imu.gyro_data.y = g_y;
+            irp_imu.gyro_data.z = g_z;
+            irp_imu.acceleration_data.x = a_x;
+            irp_imu.acceleration_data.y = a_y;
+            irp_imu.acceleration_data.z = a_z;
+            irp_imu.magneticfield_data.x = m_x;
+            irp_imu.magneticfield_data.y = m_y;
+            irp_imu.magneticfield_data.z = m_z;
+        }
+        
 
         sensor_msgs_imu.header.stamp.fromNSec(stamp);
         sensor_msgs_imu.header.frame_id = "imu";
@@ -70,35 +84,54 @@ int ImuConverter::Convert() {
         sensor_msgs_imu.orientation.y = q_y;
         sensor_msgs_imu.orientation.z = q_z;
         sensor_msgs_imu.orientation.w = q_w;
-        sensor_msgs_imu.angular_velocity.x = g_x;
-        sensor_msgs_imu.angular_velocity.y = g_y;
-        sensor_msgs_imu.angular_velocity.z = g_z;
-        sensor_msgs_imu.linear_acceleration.x = a_x;
-        sensor_msgs_imu.linear_acceleration.y = a_y;
-        sensor_msgs_imu.linear_acceleration.z = a_z;
         sensor_msgs_imu.orientation_covariance[0] = 3;
         sensor_msgs_imu.orientation_covariance[4] = 3;
         sensor_msgs_imu.orientation_covariance[8] = 3;
-        sensor_msgs_imu.angular_velocity_covariance[0] = 3;
-        sensor_msgs_imu.angular_velocity_covariance[4] = 3;
-        sensor_msgs_imu.angular_velocity_covariance[8] = 3;
-        sensor_msgs_imu.linear_acceleration_covariance[0] = 3;
-        sensor_msgs_imu.linear_acceleration_covariance[4] = 3;
-        sensor_msgs_imu.linear_acceleration_covariance[8] = 3;
 
-        sensor_msgs_mag.header.stamp.fromNSec(stamp);
-        sensor_msgs_mag.header.frame_id = "imu";
-        sensor_msgs_mag.magnetic_field.x = m_x;
-        sensor_msgs_mag.magnetic_field.y = m_y;
-        sensor_msgs_mag.magnetic_field.z = m_z;
+        if(length > 8)
+        {
+            sensor_msgs_imu.angular_velocity.x = g_x;
+            sensor_msgs_imu.angular_velocity.y = g_y;
+            sensor_msgs_imu.angular_velocity.z = g_z;
+            sensor_msgs_imu.angular_velocity_covariance[0] = 3;
+            sensor_msgs_imu.angular_velocity_covariance[4] = 3;
+            sensor_msgs_imu.angular_velocity_covariance[8] = 3;
+            sensor_msgs_imu.linear_acceleration.x = a_x;
+            sensor_msgs_imu.linear_acceleration.y = a_y;
+            sensor_msgs_imu.linear_acceleration.z = a_z;
+            sensor_msgs_imu.linear_acceleration_covariance[0] = 3;
+            sensor_msgs_imu.linear_acceleration_covariance[4] = 3;
+            sensor_msgs_imu.linear_acceleration_covariance[8] = 3;
+
+            sensor_msgs_mag.header.stamp.fromNSec(stamp);
+            sensor_msgs_mag.header.frame_id = "imu";
+            sensor_msgs_mag.magnetic_field.x = m_x;
+            sensor_msgs_mag.magnetic_field.y = m_y;
+            sensor_msgs_mag.magnetic_field.z = m_z;
+        }
+
 
         irp_bag.write(irp_topic_, irp_imu.header.stamp, irp_imu);
         raw_bag.write(raw_topic_, sensor_msgs_imu.header.stamp, sensor_msgs_imu);
-        mag_bag.write(mag_topic_, sensor_msgs_mag.header.stamp, sensor_msgs_mag);
+        if(length > 8)
+        {
+            if(!mag_bag_opened)
+            {
+                ROS_INFO("saving %s", mag_bag_file.c_str());
+                mag_bag.open(mag_bag_file.string(), rosbag::bagmode::Write);
+                mag_bag_opened = true;
+            }
+            mag_bag.write(mag_topic_, sensor_msgs_mag.header.stamp, sensor_msgs_mag);
+        }
     }
     irp_bag.close();
     raw_bag.close();
-    mag_bag.close();
+    if(mag_bag_opened)
+    {
+        mag_bag.close();
+        mag_bag_opened = false;
+    }
+    
     fclose(fp);
     ROS_INFO("done saving %s", irp_bag_file.c_str());
     ROS_INFO("done saving %s", raw_bag_file.c_str());
